@@ -22,7 +22,7 @@ library(broom)
 library(nlstools)
 ```
 
-### Nonlinear least squares
+### Exploratory graph: wild catch over time
 
 ```{r}
 # Read in data and wrangle to tidy format
@@ -46,10 +46,12 @@ ggplot(data = fish_catch_zero, aes(x = year_new, y = wild_catch)) +
   labs(x = "Year", y = "Wild catch (million tons)")
 ```
 
-The pattern shown when plotting wild catch over time may be logistic growth.
+Wild catch over time seems to be following a logistic growth pattern.
+
 Equation:
 $P(t)=\frac{K}{1+Ae^{-kt}}$
-Viewing this exploratory graph, I estimate K at ~ 95 and A at ~ 18
+
+Viewing this exploratory graph, I estimate K at ~ 95 and A at ~ 18.
 
 ```{r, include = FALSE}
 # Look at log transformed data
@@ -68,8 +70,9 @@ fish_catch_exp <- fish_catch_zero %>%
 lm_k <- lm(ln_catch ~ year_new, data = fish_catch_exp)
 ```
 
+### Nonlinear least squares
+
 ```{r}
-# Nonlinear least squares
 fish_catch_nls <- nls(wild_catch ~ K/(1 + A*exp(-r*year_new)),
               data = fish_catch_zero,
               start = list(K = 95, A = 18, r = 0.05329),
@@ -85,6 +88,12 @@ model_out <- broom::tidy(fish_catch_nls)
 A_est <- model_out$estimate[2] # Gets the first row in the estimate column
 ```
 
+Model with estimated parameters:
+
+$$P(t) = \frac{100.28}{1+4.316e^{-0.07t}}$$
+
+### Visualize model over the observed values
+
 ```{r}
 # Make predictions for wild catch
 p_predict <- predict(fish_catch_nls)
@@ -96,6 +105,8 @@ fish_catch_complete <- data.frame(fish_catch_zero, p_predict)
 ggplot(data = fish_catch_complete, aes(x = year_new, y = wild_catch)) +
   geom_point() +
   geom_line(aes(x = year_new, y = p_predict)) +
+  labs(x = "Year", y = "Wild catch (million tons)") +
+  ggtitle("Model prediction of wild fish catch through time") +
   theme_minimal()
 ```
 
