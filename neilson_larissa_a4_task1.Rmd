@@ -1,9 +1,10 @@
 ---
-title: 'Task 1: Agglomerative hierarchical clustering'
+title: 'Agglomerative hierarchical clustering'
 author: "Larissa Neilson"
 date: "3/5/2021"
-output: html_document
-  code_folding: hide
+output:
+  html_document:
+    code_folding: hide
 ---
 
 ```{r setup, include=FALSE}
@@ -39,14 +40,39 @@ site_chem <- dropna_chem %>%
   pivot_longer(!site_code, names_to = "parameter", values_to = "value") %>%
   group_by(site_code, parameter) %>% 
   summarize(parameter_mean = mean(value, na.rm = TRUE)) %>%
-  pivot_wider(names_from = "parameter", values_from = "parameter_mean")
+  pivot_wider(names_from = "parameter", values_from = "parameter_mean") %>% 
+  ungroup() %>% 
+  drop_na()
 ```
 
+```{r}
+# Scale the numeric variables
+chem_scaled <- site_chem %>% 
+  select(2:10) %>% 
+  scale()
 
+# Add sites as row names
+rownames(chem_scaled) <- site_chem$site_code
+```
 
+```{r}
+# Compute Euclidean distances
+chem_euc <- dist(chem_scaled, method = "euclidean")
+```
 
+```{r}
+# Perform hierarchical clustering with complete linkage
+hc_complete <- hclust(chem_euc, method = "complete")
 
+# Plot it with ggdendrogram
+ggdendrogram(hc_complete, 
+             rotate = TRUE) +
+  theme_minimal() +
+  labs(x = "Site", y = "Height") +
+  ggtitle("Clustering for Water Chemistry by Coastal Drainage Site")
+```
 
+**Figure 1.** Dendrogram showing multivariate clustering for water chemistry by site in the Santa Barbara Coastal drainage area (using hierarchical clustering by complete linkage).
 
 #### Data citation
 
