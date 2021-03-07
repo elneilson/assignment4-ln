@@ -21,10 +21,10 @@ library(boot)
 
 ```{r}
 # Create vectors representing the data
-did_exp <- rep(0, 22)
-did_not_exp <- rep(1, 14)
+did_exp <- rep(1, 22)
+did_not_exp <- rep(0, 14)
 
-# Combine vectors; results in: n = 36, 22 = "0" aka did personally experience exclusionary, offensive, hostile or intimidating conduct, and 14 = "1" aka did not experience this
+# Combine vectors; results in: n = 36, 22 = "1" aka did personally experience exclusionary, offensive, hostile or intimidating conduct, and 14 = "0" aka did not experience this
 study_data <- c(did_exp, did_not_exp)
 ```
 
@@ -32,7 +32,7 @@ study_data <- c(did_exp, did_not_exp)
 
 ```{r, results = "hide"}
 # Create the function
-prop_fun <- function (x,i) {mean(x[i])}
+prop_fun <- function (x,i) {sum(x[i])/length(x[i])}
 
 # Create 10,000 bootstrapped samples
 studyboot_10k <- boot(study_data,
@@ -47,7 +47,7 @@ studyboot_10k_df <- data.frame(bs_prop = studyboot_10k$t)
 
 # Histogram of 10k bootstrap sample proportions
 ggplot(data = studyboot_10k_df, aes(x = bs_prop)) +
-  geom_histogram(bins = 22, fill = "darkslategray") +
+  geom_histogram(bins = 23, fill = "darkslategray") +
   labs(x = "Proportion of genderqueer/nonbinary students who experienced exclusionary behavior at UCSB", y = "Count") +
   theme_minimal()
 ```
@@ -57,7 +57,7 @@ ggplot(data = studyboot_10k_df, aes(x = bs_prop)) +
 boot.ci(studyboot_10k, conf = 0.95)
 ```
 
-For a 95% confidence interval, we expect that the true proportion of the genderqueer/nonbinary UCSB students experiencing exclusionary behavior is between 0.22 and 0.55 (bootstrap percentile interval).
+For a 95% confidence interval, we expect that the true proportion of the genderqueer/nonbinary UCSB students experiencing exclusionary behavior is between 0.44 and 0.77 (bootstrap percentile interval).
 
 #### Data
 
