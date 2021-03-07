@@ -1,0 +1,65 @@
+---
+title: "Bootstrapped Confidence Interval for Proportions"
+author: "Larissa Neilson"
+date: "3/6/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE)
+
+library(tidyverse)
+library(boot)
+```
+
+### Recreate the data from the 2014 UCSB Report
+
+22 out of 36 surveyed UCSB community members (61%) identifying as nonbinary/genderqueer responded that they had personally experienced exclusionary, offensive, hostile or intimidating conduct.
+
+```{r}
+# Create vectors representing the data
+did_exp <- rep(0, 22)
+did_not_exp <- rep(1, 14)
+
+# Combine vectors; results in: n = 36, 22 = "0" aka did personally experience exclusionary, offensive, hostile or intimidating conduct, and 14 = "1" aka did not experience this
+study_data <- c(did_exp, did_not_exp)
+```
+
+### Bootstrap the proportion of genderqueer/nonbinary students experiencing exclusionary behavior at USCB
+
+```{r, results = "hide"}
+# Create the function
+prop_fun <- function (x,i) {mean(x[i])}
+
+# Create 10,000 bootstrapped samples
+studyboot_10k <- boot(study_data,
+                      statistic = prop_fun,
+                      R = 10000)
+studyboot_10k
+```
+
+```{r}
+# Convert to dataframe
+studyboot_10k_df <- data.frame(bs_prop = studyboot_10k$t)
+
+# Histogram of 10k bootstrap sample proportions
+ggplot(data = studyboot_10k_df, aes(x = bs_prop)) +
+  geom_histogram(bins = 22, fill = "darkslategray") +
+  labs(x = "Proportion of genderqueer/nonbinary students who experienced exclusionary behavior at UCSB", y = "Count") +
+  theme_minimal()
+```
+
+```{r, results = "hide"}
+# Calculate the 95% confidence interval
+boot.ci(studyboot_10k, conf = 0.95)
+```
+
+For a 95% confidence interval, we expect that the true proportion of the genderqueer/nonbinary UCSB students experiencing exclusionary behavior is between 0.22 and 0.55 (bootstrap percentile interval).
+
+#### Data
+
+2014 UCSB Campus Climate Project Final Report (prepared by Rankin & Associates Consulting, available at http://campusclimate.ucop.edu/_common/files/pdf-climate/ucsb-full-report.pdf).
+ 
