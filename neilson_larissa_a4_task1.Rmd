@@ -2,9 +2,7 @@
 title: 'Agglomerative hierarchical clustering'
 author: "Larissa Neilson"
 date: "3/5/2021"
-output:
-  html_document:
-    code_folding: hide
+output: html_document
 ---
 
 ```{r setup, include=FALSE}

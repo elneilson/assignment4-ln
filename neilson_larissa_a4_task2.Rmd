@@ -1,5 +1,5 @@
 ---
-title: "Parameter Estimation – Wild Fish Catch"
+title: "Global Wild Fish Catch Parameter Estimation"
 author: "Larissa Neilson"
 date: "3/5/2021"
 output:
@@ -40,7 +40,7 @@ fish_catch_zero <- fish_catch %>%
   mutate(year_new = year - min(year))
 
 # Look at the data
-ggplot(data = fish_catch_zero, aes(x = year_new, y = wild_catch)) +
+ggplot(data = fish_catch_zero, aes(x = year, y = wild_catch)) +
   geom_point() +
   theme_minimal() +
   labs(x = "Year", y = "Wild catch (million tons)")
@@ -54,11 +54,11 @@ $P(t)=\frac{K}{1+Ae^{-kt}}$
 Viewing this exploratory graph, I estimate K at ~ 95 and A at ~ 18.
 
 ```{r, include = FALSE}
-# Look at log transformed data
+# Look at the log transformed data
 ggplot(data = fish_catch_zero, aes(x = year_new, y = log(wild_catch))) +
   geom_point() +
   theme_minimal() +
-  labs(x = "Year", y = "Wild catch (million tons)")
+  labs(x = "Time", y = "Wild catch (million tons)")
 ```
 
 ```{r}
@@ -66,13 +66,13 @@ fish_catch_exp <- fish_catch_zero %>%
   filter(year_new < 8.5) %>% 
   mutate(ln_catch = log(wild_catch))
 
-# Model linear to get *k* estimate
+# Model linear to get k estimate
 lm_k <- lm(ln_catch ~ year_new, data = fish_catch_exp)
 ```
 
 ### Nonlinear least squares
 
-```{r}
+```{r, results = FALSE}
 fish_catch_nls <- nls(wild_catch ~ K/(1 + A*exp(-r*year_new)),
               data = fish_catch_zero,
               start = list(K = 95, A = 18, r = 0.05329),
@@ -81,16 +81,19 @@ fish_catch_nls <- nls(wild_catch ~ K/(1 + A*exp(-r*year_new)),
 
 # Look at the model summary
 summary(fish_catch_nls)
+```
 
+```{r}
 # Use broom package to get model outputs in tidier format
 model_out <- broom::tidy(fish_catch_nls)
+model_out
 
 A_est <- model_out$estimate[2] # Gets the first row in the estimate column
 ```
 
-Model with estimated parameters:
+Model output with estimated parameters:
 
-$$P(t) = \frac{100.28}{1+4.316e^{-0.07t}}$$
+$$P(t) = \frac{100.28}{1+4.32e^{-0.07t}}$$
 
 ### Visualize model over the observed values
 
@@ -102,14 +105,13 @@ p_predict <- predict(fish_catch_nls)
 fish_catch_complete <- data.frame(fish_catch_zero, p_predict)
 
 # Plot them together
-ggplot(data = fish_catch_complete, aes(x = year_new, y = wild_catch)) +
-  geom_point() +
-  geom_line(aes(x = year_new, y = p_predict)) +
+ggplot(data = fish_catch_complete, aes(x = year, y = wild_catch)) +
+  geom_point(cex = 1) +
+  geom_line(aes(x = year, y = p_predict), color = "red") +
   labs(x = "Year", y = "Wild catch (million tons)") +
-  ggtitle("Model prediction of wild fish catch through time") +
+  ggtitle("Model output describing wild fish catch through time") +
   theme_minimal()
 ```
-
 
 #### Data citation
 
